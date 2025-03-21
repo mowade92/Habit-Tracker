@@ -52,7 +52,6 @@
 
   <form id="habitForm">
     <label for="date">Date</label>
-    <!-- You can update the value attribute dynamically if needed -->
     <input type="date" id="date" value="2025-04-03" required>
 
     <div class="habit-group">
@@ -61,12 +60,14 @@
         <label>
           <input type="checkbox" name="habit" value="Gym" id="gymCheckbox"> Gym
         </label>
-        <!-- Calories burned input appears when Gym is checked -->
-        <input type="number" id="caloriesInput" placeholder="Calories" min="0" style="display: none;">
+        <input type="number" id="caloriesBurnedInput" placeholder="Calories Burned" min="0" style="display: none;">
       </div>
-      <label>
-        <input type="checkbox" name="habit" value="Healthy Eating"> Healthy Eating
-      </label>
+      <div class="inline-input">
+        <label>
+          <input type="checkbox" name="habit" value="Daily Calories" id="dailyCaloriesCheckbox"> Daily Calories
+        </label>
+        <input type="number" id="caloriesEatenInput" placeholder="Calories Eaten" min="0" style="display: none;">
+      </div>
       <label>
         <input type="checkbox" name="habit" value="Reading"> Reading
       </label>
@@ -76,48 +77,6 @@
     </div>
 
     <label for="notes">Notes</label>
-    <textarea id="notes" placeholder="Any reflections, struggles, or wins today..."></textarea>
+    <textarea id="notes" placeholder="Any reflections, struggles, or wins today..."><
 
-    <button type="submit">Save Day</button>
-  </form>
-
-  <div class="entry">
-    <h3>Log</h3>
-    <div id="logEntries"></div>
-  </div>
-
-  <script>
-    // Get references to the DOM elements
-    const gymCheckbox = document.getElementById('gymCheckbox');
-    const caloriesInput = document.getElementById('caloriesInput');
-    const habitForm = document.getElementById('habitForm');
-    const logEntries = document.getElementById('logEntries');
-
-    // Toggle the calories input display based on Gym checkbox state
-    gymCheckbox.addEventListener('change', function() {
-      if (gymCheckbox.checked) {
-        caloriesInput.style.display = 'inline-block';
-      } else {
-        caloriesInput.style.display = 'none';
-        caloriesInput.value = ''; // Clear input if unchecked
-      }
-    });
-
-    // Handle form submission
-    habitForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const date = document.getElementById('date').value;
-      const notes = document.getElementById('notes').value;
-      const checkedBoxes = document.querySelectorAll('input[name="habit"]:checked');
-      let habits = [];
-      checkedBoxes.forEach(function(box) {
-        habits.push(box.value);
-      });
-      
-      // If Gym is checked, get the calories burned value
-      let calories = 0;
-      if (gymCheckbox.checked) {
-        calories = parseInt(caloriesInput.value) || 0;
-      }
 
