@@ -52,7 +52,7 @@
 
   <form id="habitForm">
     <label for="date">Date</label>
-    <!-- You can update the value attribute dynamically if needed -->
+    <!-- You can change the default value if needed -->
     <input type="date" id="date" value="2025-04-03" required>
 
     <div class="habit-group">
@@ -61,12 +61,14 @@
         <label>
           <input type="checkbox" name="habit" value="Gym" id="gymCheckbox"> Gym
         </label>
-        <!-- Calories burned input appears when Gym is checked -->
-        <input type="number" id="caloriesInput" placeholder="Calories" min="0" style="display: none;">
+        <input type="number" id="caloriesBurnedInput" placeholder="Calories Burned" min="0" style="display: none;">
       </div>
-      <label>
-        <input type="checkbox" name="habit" value="Healthy Eating"> Healthy Eating
-      </label>
+      <div class="inline-input">
+        <label>
+          <input type="checkbox" name="habit" value="Daily Calories" id="dailyCaloriesCheckbox"> Daily Calories
+        </label>
+        <input type="number" id="caloriesEatenInput" placeholder="Calories Eaten" min="0" style="display: none;">
+      </div>
       <label>
         <input type="checkbox" name="habit" value="Reading"> Reading
       </label>
@@ -87,71 +89,86 @@
   </div>
 
   <script>
-    // Get references to the DOM elements
-    const gymCheckbox = document.getElementById('gymCheckbox');
-    const caloriesInput = document.getElementById('caloriesInput');
-    const habitForm = document.getElementById('habitForm');
-    const logEntries = document.getElementById('logEntries');
+    // Wait for the DOM to load before attaching handlers
+    document.addEventListener('DOMContentLoaded', function() {
+      // DOM references
+      const gymCheckbox = document.getElementById('gymCheckbox');
+      const dailyCaloriesCheckbox = document.getElementById('dailyCaloriesCheckbox');
+      const caloriesBurnedInput = document.getElementById('caloriesBurnedInput');
+      const caloriesEatenInput = document.getElementById('caloriesEatenInput');
+      const habitForm = document.getElementById('habitForm');
+      const logEntries = document.getElementById('logEntries');
 
-    // Toggle the calories input display based on Gym checkbox state
-    gymCheckbox.addEventListener('change', function() {
-      if (gymCheckbox.checked) {
-        caloriesInput.style.display = 'inline-block';
-      } else {
-        caloriesInput.style.display = 'none';
-        caloriesInput.value = ''; // Clear input if unchecked
-      }
-    });
-
-    // Handle form submission
-    habitForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const date = document.getElementById('date').value;
-      const notes = document.getElementById('notes').value;
-      const checkedBoxes = document.querySelectorAll('input[name="habit"]:checked');
-      let habits = [];
-      checkedBoxes.forEach(function(box) {
-        habits.push(box.value);
+      // Toggle display for Gym calories input
+      gymCheckbox.addEventListener('change', function() {
+        if (gymCheckbox.checked) {
+          caloriesBurnedInput.style.display = 'inline-block';
+        } else {
+          caloriesBurnedInput.style.display = 'none';
+          caloriesBurnedInput.value = '';
+        }
       });
-      
-      // If Gym is checked, get the calories burned value
-      let calories = 0;
-      if (gymCheckbox.checked) {
-        calories = parseInt(caloriesInput.value) || 0;
+
+      // Toggle display for Daily Calories input
+      dailyCaloriesCheckbox.addEventListener('change', function() {
+        if (dailyCaloriesCheckbox.checked) {
+          caloriesEatenInput.style.display = 'inline-block';
+        } else {
+          caloriesEatenInput.style.display = 'none';
+          caloriesEatenInput.value = '';
+        }
+      });
+
+      // Handle form submission
+      habitForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const date = document.getElementById('date').value;
+        const notes = document.getElementById('notes').value;
+        
+        // Get all checked habit checkboxes
+        const checkedBoxes = document.querySelectorAll('input[name="habit"]:checked');
+        let habits = [];
+        checkedBoxes.forEach(function(box) {
+          habits.push(box.value);
+        });
+        
+        // If Gym is checked, get the calories burned
+        const gymCalories = gymCheckbox.checked ? parseInt(caloriesBurnedInput.value) || 0 : 0;
+        
+        // If Daily Calories is checked, get the calories eaten
+        const dailyCalories = dailyCaloriesCheckbox.checked ? parseInt(caloriesEatenInput.value) || 0 : 0;
+        
+        const entry = { date, habits, gymCalories, dailyCalories, notes };
+        
+        // Save to localStorage
+        let entries = JSON.parse(localStorage.getItem('habitEntries')) || [];
+        entries.push(entry);
+        localStorage.setItem('habitEntries', JSON.stringify(entries));
+        
+        // Add entry to the log
+        addEntryToLog(entry);
+        habitForm.reset();
+        caloriesBurnedInput.style.display = 'none';
+        caloriesEatenInput.style.display = 'none';
+      });
+
+      // Function to display an entry in the log
+      function addEntryToLog(entry) {
+        const div = document.createElement('div');
+        const gymText = entry.gymCalories > 0 ? ` 🔥 ${entry.gymCalories} cal burned` : '';
+        const dailyText = entry.dailyCalories > 0 ? ` 🍽 ${entry.dailyCalories} cal eaten` : '';
+        div.innerHTML = `<strong>${entry.date}</strong><br>Habits: ${entry.habits.join(', ')}${gymText}${dailyText}<br><em>${entry.notes}</em>`;
+        logEntries.prepend(div);
       }
-      
-      const entry = { date, habits, calories, notes };
-      
-      // Save entry to localStorage
-      let entries = JSON.parse(localStorage.getItem('habitEntries')) || [];
-      entries.push(entry);
-      localStorage.setItem('habitEntries', JSON.stringify(entries));
-      
-      // Add entry to the log display
-      addEntryToLog(entry);
-      habitForm.reset();
-      caloriesInput.style.display = 'none';
-    });
 
-    // Function to add an entry to the log area
-    function addEntryToLog(entry) {
-      const div = document.createElement('div');
-      const caloriesText = entry.calories > 0 ? ` - ${entry.calories} cal burned` : '';
-      div.innerHTML = `<strong>${entry.date}</strong><br>Habits: ${entry.habits.join(', ')}${caloriesText}<br><em>${entry.notes}</em>`;
-      logEntries.prepend(div);
-    }
-
-    // Load saved entries on page load
-    window.onload = function() {
+      // Load saved entries on page load
       let savedEntries = JSON.parse(localStorage.getItem('habitEntries')) || [];
       savedEntries.forEach(function(entry) {
         addEntryToLog(entry);
       });
-    };
+    });
   </script>
 
 </body>
 </html>
-
-
