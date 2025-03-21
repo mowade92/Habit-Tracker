@@ -64,7 +64,6 @@
 
   <form id="habitForm">
     <label for="date">Date</label>
-    <!-- You can change the default value if needed -->
     <input type="date" id="date" value="2025-04-03" required>
 
     <div class="habit-group">
@@ -81,13 +80,11 @@
         </label>
         <input type="number" id="caloriesEatenInput" placeholder="Calories Eaten" min="0" style="display: none;">
       </div>
-      <label>
-        <input type="checkbox" name="habit" value="Reading"> Reading
-      </label>
-      <label>
-        <input type="checkbox" name="habit" value="Sleep before 11pm"> Sleep before 11pm
-      </label>
     </div>
+
+    <!-- New Step Count field replacing Reading -->
+    <label for="stepCountInput">Step Count</label>
+    <input type="number" id="stepCountInput" placeholder="Enter step count" min="0">
 
     <label for="notes">Notes</label>
     <textarea id="notes" placeholder="Any reflections, struggles, or wins today..."></textarea>
@@ -107,23 +104,22 @@
       const dailyCaloriesCheckbox = document.getElementById('dailyCaloriesCheckbox');
       const caloriesBurnedInput = document.getElementById('caloriesBurnedInput');
       const caloriesEatenInput = document.getElementById('caloriesEatenInput');
+      const stepCountInput = document.getElementById('stepCountInput');
       const habitForm = document.getElementById('habitForm');
       const logEntries = document.getElementById('logEntries');
       const caloriesRemainingBox = document.getElementById('caloriesRemainingBox');
       
       const INITIAL_CALORIES = 1500;
 
-      // Update the Calories Remaining display
+      // Update Calories Remaining based on saved entries
       function updateCaloriesRemaining() {
         let entries = JSON.parse(localStorage.getItem('habitEntries')) || [];
-        // Calculate total change: add gym calories and subtract daily calories for all entries
         let totalChange = 0;
         entries.forEach(entry => {
           totalChange += entry.gymCalories - entry.dailyCalories;
         });
         const remaining = INITIAL_CALORIES + totalChange;
         caloriesRemainingBox.textContent = 'Calories Remaining: ' + remaining;
-        // Change color based on positive or negative
         caloriesRemainingBox.style.color = remaining >= 0 ? 'green' : 'red';
       }
       
@@ -154,27 +150,23 @@
         const date = document.getElementById('date').value;
         const notes = document.getElementById('notes').value;
         
-        // Get all checked habit checkboxes
+        // Get all checked habit checkboxes (Gym and Daily Calories)
         const checkedBoxes = document.querySelectorAll('input[name="habit"]:checked');
         let habits = [];
         checkedBoxes.forEach(function(box) {
           habits.push(box.value);
         });
         
-        // If Gym is checked, get the calories burned
         const gymCalories = gymCheckbox.checked ? parseInt(caloriesBurnedInput.value) || 0 : 0;
-        
-        // If Daily Calories is checked, get the calories eaten
         const dailyCalories = dailyCaloriesCheckbox.checked ? parseInt(caloriesEatenInput.value) || 0 : 0;
+        const stepCount = parseInt(stepCountInput.value) || 0;
         
-        const entry = { date, habits, gymCalories, dailyCalories, notes };
+        const entry = { date, habits, gymCalories, dailyCalories, stepCount, notes };
         
-        // Save to localStorage
         let entries = JSON.parse(localStorage.getItem('habitEntries')) || [];
         entries.push(entry);
         localStorage.setItem('habitEntries', JSON.stringify(entries));
         
-        // Add entry to the log
         addEntryToLog(entry);
         habitForm.reset();
         caloriesBurnedInput.style.display = 'none';
@@ -188,7 +180,8 @@
         const div = document.createElement('div');
         const gymText = entry.gymCalories > 0 ? ` 🔥 ${entry.gymCalories} cal burned` : '';
         const dailyText = entry.dailyCalories > 0 ? ` 🍽 ${entry.dailyCalories} cal eaten` : '';
-        div.innerHTML = `<strong>${entry.date}</strong><br>Habits: ${entry.habits.join(', ')}${gymText}${dailyText}<br><em>${entry.notes}</em>`;
+        const stepText = entry.stepCount > 0 ? ` 🚶 ${entry.stepCount} steps` : '';
+        div.innerHTML = `<strong>${entry.date}</strong><br>Habits: ${entry.habits.join(', ')}${gymText}${dailyText}${stepText}<br><em>${entry.notes}</em>`;
         logEntries.prepend(div);
       }
       
