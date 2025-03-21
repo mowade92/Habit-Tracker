@@ -5,40 +5,39 @@
     <title>Habit Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; background: #f9f9f9; }
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; background: #f0f4f8; }
         h1 { text-align: center; }
         label { display: block; margin-top: 15px; font-weight: bold; }
-        input, textarea, button {
-            width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box;
-        }
+        input[type="checkbox"] { margin-right: 10px; }
         .entry { border: 1px solid #ccc; padding: 10px; margin-top: 20px; background: white; }
+        .habit-group { margin-bottom: 10px; }
+        button { width: 100%; padding: 10px; margin-top: 20px; font-size: 16px; }
     </style>
 </head>
 <body>
 
-    <h1>Habit Tracker</h1>
+    <h1>Daily Habit Tracker</h1>
 
     <form id="habitForm">
         <label for="date">Date</label>
         <input type="date" id="date" value="2025-03-21" required>
 
-        <label for="habit">Habit</label>
-        <input type="text" id="habit" placeholder="e.g. Workout, Read, Eat Healthy" required>
-
-        <label for="status">Did you complete it?</label>
-        <select id="status">
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select>
+        <div class="habit-group">
+            <label>Today's Habits</label>
+            <label><input type="checkbox" name="habit" value="Gym"> Gym</label>
+            <label><input type="checkbox" name="habit" value="Healthy Eating"> Healthy Eating</label>
+            <label><input type="checkbox" name="habit" value="Reading"> Reading</label>
+            <label><input type="checkbox" name="habit" value="Sleep before 11pm"> Sleep before 11pm</label>
+        </div>
 
         <label for="notes">Notes</label>
-        <textarea id="notes" placeholder="Anything to remember or reflect on?"></textarea>
+        <textarea id="notes" placeholder="Reflections, struggles, or wins today..."></textarea>
 
-        <button type="submit">Save Entry</button>
+        <button type="submit">Save Day</button>
     </form>
 
-    <div id="log" class="entry">
-        <h3>Saved Entries</h3>
+    <div class="entry">
+        <h3>Log</h3>
         <div id="logEntries"></div>
     </div>
 
@@ -47,23 +46,22 @@
         const logEntries = document.getElementById("logEntries");
 
         window.onload = () => {
-            const saved = JSON.parse(localStorage.getItem("habits")) || [];
+            const saved = JSON.parse(localStorage.getItem("dailyHabits")) || [];
             saved.forEach(addEntryToLog);
         }
 
         form.onsubmit = function(e) {
             e.preventDefault();
 
-            const entry = {
-                date: document.getElementById("date").value,
-                habit: document.getElementById("habit").value,
-                status: document.getElementById("status").value,
-                notes: document.getElementById("notes").value
-            };
+            const date = document.getElementById("date").value;
+            const notes = document.getElementById("notes").value;
+            const checkboxes = document.querySelectorAll('input[name="habit"]:checked');
+            const habits = Array.from(checkboxes).map(cb => cb.value);
 
-            let habits = JSON.parse(localStorage.getItem("habits")) || [];
-            habits.push(entry);
-            localStorage.setItem("habits", JSON.stringify(habits));
+            const entry = { date, habits, notes };
+            let dailyHabits = JSON.parse(localStorage.getItem("dailyHabits")) || [];
+            dailyHabits.push(entry);
+            localStorage.setItem("dailyHabits", JSON.stringify(dailyHabits));
 
             addEntryToLog(entry);
             form.reset();
@@ -71,7 +69,7 @@
 
         function addEntryToLog(entry) {
             const div = document.createElement("div");
-            div.innerHTML = `<strong>${entry.date}</strong> - <b>${entry.habit}</b>: ${entry.status}<br><em>${entry.notes}</em>`;
+            div.innerHTML = `<strong>\${entry.date}</strong><br>✅ \${entry.habits.join(', ')}<br><em>\${entry.notes}</em>`;
             logEntries.prepend(div);
         }
     </script>
