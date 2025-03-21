@@ -15,6 +15,15 @@
     h1 {
       text-align: center;
     }
+    #caloriesRemainingBox {
+      font-size: 2em;
+      text-align: center;
+      margin: 20px auto;
+      padding: 10px;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      width: fit-content;
+    }
     label {
       display: block;
       margin-top: 15px;
@@ -49,6 +58,9 @@
 <body>
 
   <h1>Daily Habit Tracker</h1>
+
+  <!-- Calories Remaining Box -->
+  <div id="caloriesRemainingBox">Calories Remaining: 1500</div>
 
   <form id="habitForm">
     <label for="date">Date</label>
@@ -89,7 +101,6 @@
   </div>
 
   <script>
-    // Wait for the DOM to load before attaching handlers
     document.addEventListener('DOMContentLoaded', function() {
       // DOM references
       const gymCheckbox = document.getElementById('gymCheckbox');
@@ -98,7 +109,24 @@
       const caloriesEatenInput = document.getElementById('caloriesEatenInput');
       const habitForm = document.getElementById('habitForm');
       const logEntries = document.getElementById('logEntries');
+      const caloriesRemainingBox = document.getElementById('caloriesRemainingBox');
+      
+      const INITIAL_CALORIES = 1500;
 
+      // Update the Calories Remaining display
+      function updateCaloriesRemaining() {
+        let entries = JSON.parse(localStorage.getItem('habitEntries')) || [];
+        // Calculate total change: add gym calories and subtract daily calories for all entries
+        let totalChange = 0;
+        entries.forEach(entry => {
+          totalChange += entry.gymCalories - entry.dailyCalories;
+        });
+        const remaining = INITIAL_CALORIES + totalChange;
+        caloriesRemainingBox.textContent = 'Calories Remaining: ' + remaining;
+        // Change color based on positive or negative
+        caloriesRemainingBox.style.color = remaining >= 0 ? 'green' : 'red';
+      }
+      
       // Toggle display for Gym calories input
       gymCheckbox.addEventListener('change', function() {
         if (gymCheckbox.checked) {
@@ -108,7 +136,7 @@
           caloriesBurnedInput.value = '';
         }
       });
-
+      
       // Toggle display for Daily Calories input
       dailyCaloriesCheckbox.addEventListener('change', function() {
         if (dailyCaloriesCheckbox.checked) {
@@ -118,7 +146,7 @@
           caloriesEatenInput.value = '';
         }
       });
-
+      
       // Handle form submission
       habitForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -151,8 +179,10 @@
         habitForm.reset();
         caloriesBurnedInput.style.display = 'none';
         caloriesEatenInput.style.display = 'none';
+        
+        updateCaloriesRemaining();
       });
-
+      
       // Function to display an entry in the log
       function addEntryToLog(entry) {
         const div = document.createElement('div');
@@ -161,12 +191,14 @@
         div.innerHTML = `<strong>${entry.date}</strong><br>Habits: ${entry.habits.join(', ')}${gymText}${dailyText}<br><em>${entry.notes}</em>`;
         logEntries.prepend(div);
       }
-
+      
       // Load saved entries on page load
       let savedEntries = JSON.parse(localStorage.getItem('habitEntries')) || [];
       savedEntries.forEach(function(entry) {
         addEntryToLog(entry);
       });
+      
+      updateCaloriesRemaining();
     });
   </script>
 
