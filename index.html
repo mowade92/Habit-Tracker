@@ -11,6 +11,8 @@
         input[type="checkbox"] { margin-right: 10px; }
         .entry { border: 1px solid #ccc; padding: 10px; margin-top: 20px; background: white; }
         .habit-group { margin-bottom: 10px; }
+        .inline-input { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+        .inline-input input[type="number"] { width: 100px; }
         button { width: 100%; padding: 10px; margin-top: 20px; font-size: 16px; }
     </style>
 </head>
@@ -24,7 +26,10 @@
 
         <div class="habit-group">
             <label>Today's Habits</label>
-            <label><input type="checkbox" name="habit" value="Gym"> Gym</label>
+            <div class="inline-input">
+                <label><input type="checkbox" name="habit" value="Gym" id="gymCheckbox"> Gym</label>
+                <input type="number" id="caloriesBurned" placeholder="Calories" min="0" style="display:none;" />
+            </div>
             <label><input type="checkbox" name="habit" value="Healthy Eating"> Healthy Eating</label>
             <label><input type="checkbox" name="habit" value="Reading"> Reading</label>
             <label><input type="checkbox" name="habit" value="Sleep before 11pm"> Sleep before 11pm</label>
@@ -44,11 +49,17 @@
     <script>
         const form = document.getElementById("habitForm");
         const logEntries = document.getElementById("logEntries");
+        const gymCheckbox = document.getElementById("gymCheckbox");
+        const caloriesBurnedInput = document.getElementById("caloriesBurned");
 
         window.onload = () => {
             const saved = JSON.parse(localStorage.getItem("dailyHabits")) || [];
             saved.forEach(addEntryToLog);
         }
+
+        gymCheckbox.addEventListener("change", () => {
+            caloriesBurnedInput.style.display = gymCheckbox.checked ? "inline-block" : "none";
+        });
 
         form.onsubmit = function(e) {
             e.preventDefault();
@@ -57,19 +68,22 @@
             const notes = document.getElementById("notes").value;
             const checkboxes = document.querySelectorAll('input[name="habit"]:checked');
             const habits = Array.from(checkboxes).map(cb => cb.value);
+            const calories = gymCheckbox.checked ? parseInt(caloriesBurnedInput.value) || 0 : 0;
 
-            const entry = { date, habits, notes };
+            const entry = { date, habits, calories, notes };
             let dailyHabits = JSON.parse(localStorage.getItem("dailyHabits")) || [];
             dailyHabits.push(entry);
             localStorage.setItem("dailyHabits", JSON.stringify(dailyHabits));
 
             addEntryToLog(entry);
             form.reset();
+            caloriesBurnedInput.style.display = "none";
         }
 
         function addEntryToLog(entry) {
             const div = document.createElement("div");
-            div.innerHTML = `<strong>\${entry.date}</strong><br>✅ \${entry.habits.join(', ')}<br><em>\${entry.notes}</em>`;
+            const caloriesText = entry.calories > 0 ? ` 🔥 ${entry.calories} cal` : '';
+            div.innerHTML = `<strong>${entry.date}</strong><br>✅ ${entry.habits.join(', ')}${caloriesText}<br><em>${entry.notes}</em>`;
             logEntries.prepend(div);
         }
     </script>
